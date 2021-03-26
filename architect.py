@@ -79,7 +79,6 @@ class Architect():
         with torch.no_grad():
             for alpha, da, h in zip(self.net.alphas(), dalpha, hessian):
                 alpha.grad = da - xi*h
-        print('memory_allocatedt1', torch.cuda.memory_allocated() / 1e9, 'memory_reserved', torch.cuda.memory_reserved() / 1e9)
 
         #visual_encoder_gradients, coeff_vector_gradients =
         meta_learn(self.net, w_optim, trn_X, trn_y, val_X, val_y, coefficient_vector, visual_encoder)

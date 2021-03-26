@@ -149,7 +149,7 @@ def train(train_loader, valid_loader, model, architect, w_optim, alpha_optim, vi
         architect.unrolled_backward(trn_X, trn_y, val_X, val_y, lr, w_optim, visual_encoder, coefficient_vector)
 
         alpha_optim.step()
-        print(visual_encoder.parameters(()))
+        print(list(visual_encoder.parameters(())))
         visual_encoder_optimizer.step()  # updates visual encoder weights
         coeff_vector_optimizer.step()  # updates coefficient vector
 
