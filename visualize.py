@@ -5,7 +5,6 @@ import genotypes as gt
 
 
 def plot(genotype, file_path, caption=None):
-    """ make DAG plot and save to file_path as .png """
     edge_attr = {
         'fontsize': '20',
         'fontname': 'times'
