@@ -4,7 +4,7 @@ Requirements:
     - ImageMagick (apt-get)
     - PIL (pip)
 """
-from graphviz import Digraph
+#from graphviz import Digraph
 import glob
 import os
 import subprocess

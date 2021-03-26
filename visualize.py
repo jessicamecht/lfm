@@ -1,6 +1,6 @@
-""" Network architecture visualizer using graphviz """
+""" Network architecture visualizer using graphviz 
 import sys
-from graphviz import Digraph
+#from graphviz import Digraph
 import genotypes as gt
 
 
@@ -72,3 +72,4 @@ if __name__ == '__main__':
 
     plot(genotype.normal, "normal")
     plot(genotype.reduce, "reduction")
+    """

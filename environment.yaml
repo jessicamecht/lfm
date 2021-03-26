@@ -17,7 +17,7 @@ dependencies:
     - Pillow==6.2.2
     - tensorflow==2.4.1
     - higher
-    - graphviz==0.8.4
+    - graphviz
   - numpy==1.19.2
   - torchvision
   - tensorboard==1.13.0
