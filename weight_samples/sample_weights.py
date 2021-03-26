@@ -16,7 +16,6 @@ def calculate_similarities(predictive_performance, visual_similarity_scores, lab
     predictive_performance = predictive_performance.reshape(1, predictive_performance.shape[0])
     repeated_pred_perf = predictive_performance.repeat_interleave(visual_similarity_scores.shape[0], dim=0)
     assert(visual_similarity_scores.shape == label_similarity_scores.shape == repeated_pred_perf.shape)
-
     return visual_similarity_scores * label_similarity_scores * repeated_pred_perf
 
 def sample_weights(predictive_performance, visual_similarity_scores, label_similarity_scores, r):
@@ -45,7 +44,6 @@ def calc_instance_weights(input_train, target_train, input_val, target_val, val_
         coefficient: current coefficient vector of size (number train examples, 1)
         '''
     crit = nn.CrossEntropyLoss(reduction='none')
-    #preds, _ = torch.max(val_logits,1)
     predictive_performance = crit(val_logits, target_val)
     vis_similarity = visual_validation_similarity(visual_encoder, input_val, input_train)
     label_similarity = measure_label_similarity(target_val, target_train)

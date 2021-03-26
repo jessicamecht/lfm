@@ -10,7 +10,7 @@ import torch.nn.functional as F
 
 class Architect():
     """ Compute gradients of alphas """
-    def __init__(self, net, w_momentum, w_weight_decay, visual_encoder, coefficient_vector):
+    def __init__(self, net, w_momentum, w_weight_decay):
         """
         Args:
             net
@@ -20,8 +20,6 @@ class Architect():
         self.v_net = copy.deepcopy(net)
         self.w_momentum = w_momentum
         self.w_weight_decay = w_weight_decay
-        self.visual_encoder = visual_encoder
-        self.coefficient_vector = coefficient_vector
 
     def virtual_step(self, trn_X, trn_y, xi, w_optim):
         """
@@ -56,7 +54,7 @@ class Architect():
             for a, va in zip(self.net.alphas(), self.v_net.alphas()):
                 va.copy_(a)
 
-    def unrolled_backward(self, trn_X, trn_y, val_X, val_y, xi, w_optim):
+    def unrolled_backward(self, trn_X, trn_y, val_X, val_y, xi, w_optim, visual_encoder, coefficient_vector):
         """ Compute unrolled loss and backward its gradients
         Args:
             xi: learning rate for virtual gradient step (same as net lr)
@@ -82,9 +80,8 @@ class Architect():
             for alpha, da, h in zip(self.net.alphas(), dalpha, hessian):
                 alpha.grad = da - xi*h
 
-        visual_encoder_gradients, coeff_vector_gradients = meta_learn(self.net, w_optim, trn_X, trn_y, val_X, val_y, self.coefficient_vector, self.visual_encoder)
-        update_gradients(visual_encoder_gradients, coeff_vector_gradients, self.visual_encoder,
-                         self.coefficient_vector)
+        visual_encoder_gradients, coeff_vector_gradients = meta_learn(self.net, w_optim, trn_X, trn_y, val_X, val_y, coefficient_vector, visual_encoder)
+        update_gradients(visual_encoder_gradients, coeff_vector_gradients, visual_encoder, coefficient_vector)
 
     def compute_hessian(self, dw, trn_X, trn_y):
         """

@@ -4,16 +4,13 @@ torch.autograd.set_detect_anomaly(True)
 sys.path.append('../')
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-def visual_validation_similarity(model, validation_examples, training_examples, init=False):
+def visual_validation_similarity(model, validation_examples, training_examples):
     '''function to calculate the image similarities of training and validation examples by decoding the images
     into an embedding space
     :param validation_examples torch of size (number of val images, channels, height, width)
     :param training_examples torch of size (number of training images, channels, height, width)
     :param init: Boolean to indicate which feature extractor to use
     :returns visual_similarity torch of size (number train examples, number val examples)'''
-
     #create the features
     validation_embedding = extract_resnet_features(validation_examples, model) # (number val examples,number features)
     training_embedding = extract_resnet_features(training_examples, model) # (number train examples,number features)
