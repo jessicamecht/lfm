@@ -9,6 +9,7 @@ import utils
 from models.search_cnn import SearchCNNController
 from architect import Architect
 from visualize import plot
+from models.visual_encoder import Resnet_Encoder
 
 
 config = SearchConfig()
@@ -70,7 +71,18 @@ def main():
                                                pin_memory=True)
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         w_optim, config.epochs, eta_min=config.w_lr_min)
-    architect = Architect(model, config.w_momentum, config.w_weight_decay)
+
+    visual_encoder = Resnet_Encoder(nn.CrossEntropyLoss())
+    inputDim = next(iter(valid_loader))[0].shape[0]
+    coefficient_vector = torch.nn.Parameter(torch.ones(inputDim, 1,  requires_grad=True).to(device))
+
+    architect = Architect(model, config.w_momentum, config.w_weight_decay, visual_encoder, coefficient_vector)
+
+    visual_encoder_optimizer = torch.optim.Adam(visual_encoder.parameters(), betas=(0.5, 0.999),
+                                                weight_decay=config.alpha_weight_decay)
+
+    coeff_vector_optimizer = torch.optim.Adam([coefficient_vector], betas=(0.5, 0.999),
+                                              weight_decay=config.alpha_weight_decay)
 
     # training loop
     best_top1 = 0.
@@ -81,7 +93,7 @@ def main():
         model.print_alphas(logger)
 
         # training
-        train(train_loader, valid_loader, model, architect, w_optim, alpha_optim, lr, epoch)
+        train(train_loader, valid_loader, model, architect, w_optim, visual_encoder_optimizer, coeff_vector_optimizer, alpha_optim, lr, epoch)
 
         # validation
         cur_step = (epoch+1) * len(train_loader)
@@ -112,7 +124,7 @@ def main():
     logger.info("Best Genotype = {}".format(best_genotype))
 
 
-def train(train_loader, valid_loader, model, architect, w_optim, alpha_optim, lr, epoch):
+def train(train_loader, valid_loader, model, architect, w_optim, alpha_optim, visual_encoder_optimizer, coeff_vector_optimizer, lr, epoch):
     top1 = utils.AverageMeter()
     top5 = utils.AverageMeter()
     losses = utils.AverageMeter()
@@ -129,6 +141,10 @@ def train(train_loader, valid_loader, model, architect, w_optim, alpha_optim, lr
 
         # phase 2. architect step (alpha)
         alpha_optim.zero_grad()
+        visual_encoder_optimizer.zero_grad()
+        coeff_vector_optimizer.zero_grad()
+
+
         architect.unrolled_backward(trn_X, trn_y, val_X, val_y, lr, w_optim)
         alpha_optim.step()
 
@@ -140,6 +156,8 @@ def train(train_loader, valid_loader, model, architect, w_optim, alpha_optim, lr
         # gradient clipping
         nn.utils.clip_grad_norm_(model.weights(), config.w_grad_clip)
         w_optim.step()
+        visual_encoder_optimizer.step()  # updates visual encoder weights
+        coeff_vector_optimizer.step()  # updates coefficient vector
 
         prec1, prec5 = utils.accuracy(logits, trn_y, topk=(1, 5))
         losses.update(loss.item(), N)
