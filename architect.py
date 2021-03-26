@@ -79,6 +79,7 @@ class Architect():
         with torch.no_grad():
             for alpha, da, h in zip(self.net.alphas(), dalpha, hessian):
                 alpha.grad = da - xi*h
+        print('memory_allocatedt1', torch.cuda.memory_allocated() / 1e9, 'memory_reserved', torch.cuda.memory_reserved() / 1e9)
 
         #visual_encoder_gradients, coeff_vector_gradients =
         meta_learn(self.net, w_optim, trn_X, trn_y, val_X, val_y, coefficient_vector, visual_encoder)
@@ -162,9 +163,7 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
             #coeff_vector_gradients = coeff_vector_gradients[0].detach()
             #visual_encoder_gradients = torch.autograd.grad(meta_val_loss, visual_encoder.parameters())
             #visual_encoder_gradients = (visual_encoder_gradients[0].detach(), visual_encoder_gradients[1].detach())# equivalent to backward for given parameters
-
-            print('memory_allocatedtlast', torch.cuda.memory_allocated() / 1e9, 'memory_reserved', torch.cuda.memory_reserved() / 1e9)
-            #logits.detach()
+            logits.detach()
             weighted_training_loss.detach()
         del logits, meta_val_loss, foptimizer, fmodel, weighted_training_loss
         gc.collect()
