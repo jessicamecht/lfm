@@ -77,7 +77,7 @@ def main():
     inputDim = next(iter(valid_loader))[0].shape[0]
     coefficient_vector = torch.nn.Parameter(torch.ones(inputDim, 1,  requires_grad=True).to(device))
 
-    architect = Architect(model, config.w_momentum, config.w_weight_decay, visual_encoder, coefficient_vector)
+    architect = Architect(model, config.w_momentum, config.w_weight_decay)
 
     visual_encoder_optimizer = torch.optim.Adam(visual_encoder.parameters(), betas=(0.5, 0.999),
                                                 weight_decay=config.alpha_weight_decay)
@@ -146,7 +146,7 @@ def train(train_loader, valid_loader, model, architect, w_optim, alpha_optim, vi
         coeff_vector_optimizer.zero_grad()
 
 
-        architect.unrolled_backward(trn_X, trn_y, val_X, val_y, lr, w_optim)
+        architect.unrolled_backward(trn_X, trn_y, val_X, val_y, lr, w_optim, visual_encoder, coefficient_vector)
         alpha_optim.step()
 
         # phase 1. child network step (w)
