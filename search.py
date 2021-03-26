@@ -8,7 +8,7 @@ from config import SearchConfig
 import utils
 from models.search_cnn import SearchCNNController
 from architect import Architect
-from visualize import plot
+#from visualize import plot
 from models.visual_encoder import Resnet_Encoder
 
 
