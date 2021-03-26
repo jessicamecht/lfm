@@ -73,6 +73,7 @@ def main():
         w_optim, config.epochs, eta_min=config.w_lr_min)
 
     visual_encoder = Resnet_Encoder(nn.CrossEntropyLoss())
+    visual_encoder = visual_encoder.to(device)
     inputDim = next(iter(valid_loader))[0].shape[0]
     coefficient_vector = torch.nn.Parameter(torch.ones(inputDim, 1,  requires_grad=True).to(device))
 
