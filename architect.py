@@ -80,7 +80,8 @@ class Architect():
             for alpha, da, h in zip(self.net.alphas(), dalpha, hessian):
                 alpha.grad = da - xi*h
 
-        #visual_encoder_gradients, coeff_vector_gradients = meta_learn(self.net, w_optim, trn_X, trn_y, val_X, val_y, coefficient_vector, visual_encoder)
+        #visual_encoder_gradients, coeff_vector_gradients =
+        meta_learn(self.net, w_optim, trn_X, trn_y, val_X, val_y, coefficient_vector, visual_encoder)
         #update_gradients(visual_encoder_gradients, coeff_vector_gradients, visual_encoder, coefficient_vector)
 
     def compute_hessian(self, dw, trn_X, trn_y):
@@ -144,35 +145,31 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
     with torch.backends.cudnn.flags(enabled=False):
         with higher.innerloop_ctx(model, optimizer, copy_initial_weights=True) as (fmodel, foptimizer):
             # functional version of model allows gradient propagation through parameters of a model
-            ##heavy mem allocation here
-            print('memory_allocatedt1', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
-                      torch.cuda.memory_reserved() / 1e9)
+            print('memory_allocatedt1', torch.cuda.memory_allocated() / 1e9, 'memory_reserved', torch.cuda.memory_reserved() / 1e9)
             logits = fmodel(input)
-            print('memory_allocatedt11', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
-                  torch.cuda.memory_reserved() / 1e9)
-            print('memory_allocatedt2', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
-                  torch.cuda.memory_reserved() / 1e9)
+            print('memory_allocatedt11', torch.cuda.memory_allocated() / 1e9, 'memory_reserved', torch.cuda.memory_reserved() / 1e9)
+            print('memory_allocatedt2', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',  torch.cuda.memory_reserved() / 1e9)
 
             weights = calc_instance_weights(input, target, input_val, target_val, logits_val, coefficient_vector, visual_encoder)
+            print(weights)
             weighted_training_loss = torch.mean(weights * F.cross_entropy(logits, target, reduction='none'))
             foptimizer.step(weighted_training_loss)  # replaces gradients with respect to model weights -> w2
 
             logits_val = fmodel(input_val)
             meta_val_loss = F.cross_entropy(logits_val, target_val)
-            coeff_vector_gradients = torch.autograd.grad(meta_val_loss, coefficient_vector, retain_graph=True)
-            coeff_vector_gradients = coeff_vector_gradients[0].detach()
-            visual_encoder_gradients = torch.autograd.grad(meta_val_loss,
-                                                               visual_encoder.parameters())
-            visual_encoder_gradients = (visual_encoder_gradients[0].detach(), visual_encoder_gradients[1].detach())# equivalent to backward for given parameters
+            meta_val_loss.backward()
+            #coeff_vector_gradients = torch.autograd.grad(meta_val_loss, coefficient_vector, retain_graph=True)
+            #coeff_vector_gradients = coeff_vector_gradients[0].detach()
+            #visual_encoder_gradients = torch.autograd.grad(meta_val_loss, visual_encoder.parameters())
+            #visual_encoder_gradients = (visual_encoder_gradients[0].detach(), visual_encoder_gradients[1].detach())# equivalent to backward for given parameters
 
-            print('memory_allocatedtlast', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
-              torch.cuda.memory_reserved() / 1e9)
-            logits.detach()
+            print('memory_allocatedtlast', torch.cuda.memory_allocated() / 1e9, 'memory_reserved', torch.cuda.memory_reserved() / 1e9)
+            #logits.detach()
             weighted_training_loss.detach()
         del logits, meta_val_loss, foptimizer, fmodel, weighted_training_loss
         gc.collect()
         torch.cuda.empty_cache()
-    return visual_encoder_gradients, coeff_vector_gradients
+    #return visual_encoder_gradients, coeff_vector_gradients
 
 
 

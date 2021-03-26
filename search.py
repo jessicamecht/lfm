@@ -147,7 +147,10 @@ def train(train_loader, valid_loader, model, architect, w_optim, alpha_optim, vi
 
 
         architect.unrolled_backward(trn_X, trn_y, val_X, val_y, lr, w_optim, visual_encoder, coefficient_vector)
+
         alpha_optim.step()
+        visual_encoder_optimizer.step()  # updates visual encoder weights
+        coeff_vector_optimizer.step()  # updates coefficient vector
 
         # phase 1. child network step (w)
         w_optim.zero_grad()
@@ -157,8 +160,7 @@ def train(train_loader, valid_loader, model, architect, w_optim, alpha_optim, vi
         # gradient clipping
         nn.utils.clip_grad_norm_(model.weights(), config.w_grad_clip)
         w_optim.step()
-        visual_encoder_optimizer.step()  # updates visual encoder weights
-        coeff_vector_optimizer.step()  # updates coefficient vector
+
 
         prec1, prec5 = utils.accuracy(logits, trn_y, topk=(1, 5))
         losses.update(loss.item(), N)
