@@ -94,7 +94,7 @@ def main():
         model.print_alphas(logger)
 
         # training
-        train(train_loader, valid_loader, model, architect, w_optim, visual_encoder_optimizer, coeff_vector_optimizer, alpha_optim, lr, epoch, visual_encoder, coefficient_vector)
+        train(train_loader, valid_loader, model, architect, w_optim, alpha_optim, visual_encoder_optimizer, coeff_vector_optimizer, visual_encoder, coefficient_vector, lr, epoch)
 
         # validation
         cur_step = (epoch+1) * len(train_loader)
