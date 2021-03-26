@@ -80,8 +80,8 @@ class Architect():
             for alpha, da, h in zip(self.net.alphas(), dalpha, hessian):
                 alpha.grad = da - xi*h
 
-        visual_encoder_gradients, coeff_vector_gradients = meta_learn(self.net, w_optim, trn_X, trn_y, val_X, val_y, coefficient_vector, visual_encoder)
-        update_gradients(visual_encoder_gradients, coeff_vector_gradients, visual_encoder, coefficient_vector)
+        #visual_encoder_gradients, coeff_vector_gradients = meta_learn(self.net, w_optim, trn_X, trn_y, val_X, val_y, coefficient_vector, visual_encoder)
+        #update_gradients(visual_encoder_gradients, coeff_vector_gradients, visual_encoder, coefficient_vector)
 
     def compute_hessian(self, dw, trn_X, trn_y):
         """
