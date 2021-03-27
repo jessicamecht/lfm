@@ -63,12 +63,14 @@ def main():
                                                batch_size=config.batch_size,
                                                sampler=train_sampler,
                                                num_workers=config.workers,
-                                               pin_memory=True)
+                                               pin_memory=True,
+                                               drop_last=True)
     valid_loader = torch.utils.data.DataLoader(train_data,
                                                batch_size=config.batch_size,
                                                sampler=valid_sampler,
                                                num_workers=config.workers,
-                                               pin_memory=True)
+                                               pin_memory=True,
+                                               drop_last=True)
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         w_optim, config.epochs, eta_min=config.w_lr_min)
 
