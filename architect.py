@@ -5,6 +5,7 @@ import gc
 from weight_samples.sample_weights import calc_instance_weights
 import higher
 import torch.nn.functional as F
+import torch.nn as nn
 
 
 
@@ -166,11 +167,20 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
             #visual_encoder_gradients = (visual_encoder_gradients[0].detach(), visual_encoder_gradients[1].detach())# equivalent to backward for given parameters
             logits.detach()
             weighted_training_loss.detach()
+        recursive_del(fmodel.modules())
         del logits, meta_val_loss, foptimizer, fmodel, weighted_training_loss, logits_val, weights,
         gc.collect()
         torch.cuda.empty_cache()
     #return visual_encoder_gradients, coeff_vector_gradients
 
+def recursive_del(modules):
+    children = list(modules.children())
+    if not children:
+        if isinstance(modules, nn.Linear) or isinstance(modules, nn.Embedding) or isinstance(modules, nn.Conv2d):
+            del modules.weight
+    else:
+        for child in children:
+            recursive_del(child)
 
 
 def update_gradients(visual_encoder_gradients, coeff_vector_gradients, visual_encoder, coefficient_vector):
