@@ -151,15 +151,16 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
             # functional version of model allows gradient propagation through parameters of a model
             logits = fmodel(input)
 
-            #weights = calc_instance_weights(input, target, input_val, target_val, logits_val, coefficient_vector, visual_encoder)
+            weights = calc_instance_weights(input, target, input_val, target_val, logits_val, coefficient_vector, visual_encoder)
             loss = F.cross_entropy(logits, target, reduction='none')
-            weights = torch.ones(loss.shape).to("cuda")
             weighted_training_loss = torch.mean(weights * loss)
-            #foptimizer.step(weighted_training_loss)  # replaces gradients with respect to model weights -> w2
+            foptimizer.step(weighted_training_loss)  # replaces gradients with respect to model weights -> w2
 
             logits_val = fmodel(input_val)
             meta_val_loss = F.cross_entropy(logits_val, target_val)
             meta_val_loss.backward()
+    for module in fmodel.modules():
+        del module
             #coeff_vector_gradients = torch.autograd.grad(meta_val_loss, coefficient_vector, retain_graph=True)
             #coeff_vector_gradients = coeff_vector_gradients[0].detach()
             #visual_encoder_gradients = torch.autograd.grad(meta_val_loss, visual_encoder.parameters())
