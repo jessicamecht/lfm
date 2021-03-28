@@ -81,7 +81,11 @@ class Architect():
                 alpha.grad = da - xi*h
 
         #visual_encoder_gradients, coeff_vector_gradients =
+        print('memory_allocated', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
+              torch.cuda.memory_reserved() / 1e9)
         meta_learn(self.net, w_optim, trn_X, trn_y, val_X, val_y, coefficient_vector, visual_encoder)
+        print('memory_allocated1', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
+              torch.cuda.memory_reserved() / 1e9)
         #update_gradients(visual_encoder_gradients, coeff_vector_gradients, visual_encoder, coefficient_vector)
 
     def compute_hessian(self, dw, trn_X, trn_y):
