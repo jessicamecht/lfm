@@ -174,7 +174,8 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
     #return visual_encoder_gradients, coeff_vector_gradients
 
 def recursive_del(modules):
-    children = list(modules.children())
+    children = list(modules)
+    print(children)
     if not children:
         if isinstance(modules, nn.Linear) or isinstance(modules, nn.Embedding) or isinstance(modules, nn.Conv2d):
             del modules.weight
