@@ -152,9 +152,9 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
             logits = fmodel(input)
 
             #weights = calc_instance_weights(input, target, input_val, target_val, logits_val, coefficient_vector, visual_encoder)
-            ce = F.cross_entropy(logits, target, reduction='none')
-            weights = torch.ones(ce.shape).to("cuda")
-            weighted_training_loss = torch.mean(weights * ce)
+            loss = F.cross_entropy(logits, target, reduction='none')
+            weights = torch.ones(loss.shape).to("cuda")
+            weighted_training_loss = loss#torch.mean(weights * loss)
             foptimizer.step(weighted_training_loss)  # replaces gradients with respect to model weights -> w2
 
             logits_val = fmodel(input_val)
