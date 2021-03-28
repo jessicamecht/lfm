@@ -10,6 +10,7 @@ from models.search_cnn import SearchCNNController
 from architect import Architect
 #from visualize import plot
 from models.visual_encoder import Resnet_Encoder
+from mem_report import mem_report
 
 
 config = SearchConfig()
@@ -97,7 +98,7 @@ def main():
 
         # training
         train(train_loader, valid_loader, model, architect, w_optim, alpha_optim, visual_encoder_optimizer, coeff_vector_optimizer, visual_encoder, coefficient_vector, lr, epoch)
-
+        mem_report()
         # validation
         cur_step = (epoch+1) * len(train_loader)
         top1 = validate(valid_loader, model, epoch, cur_step)
@@ -138,6 +139,8 @@ def train(train_loader, valid_loader, model, architect, w_optim, alpha_optim, vi
     model.train()
 
     for step, ((trn_X, trn_y), (val_X, val_y)) in enumerate(zip(train_loader, valid_loader)):
+        if step > 0:
+            break
         trn_X, trn_y = trn_X.to(device, non_blocking=True), trn_y.to(device, non_blocking=True)
         val_X, val_y = val_X.to(device, non_blocking=True), val_y.to(device, non_blocking=True)
         N = trn_X.size(0)
