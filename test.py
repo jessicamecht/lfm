@@ -20,7 +20,7 @@ class EasyModel(nn.Module):
     def forward(self, x):
         x = torch.flatten(x, start_dim=1).to(device)
         x = self.activation(self.fc1(x))
-        x = self.sigmoid(self.fc2(x))
+        x = torch.sigmoid(self.fc2(x))
         return x
 
 
