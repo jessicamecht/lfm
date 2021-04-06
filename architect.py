@@ -155,7 +155,7 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
             weights = calc_instance_weights(input, target, input_val, target_val, logits_val, coefficient_vector, visual_encoder)
             loss = F.cross_entropy(logits, target, reduction='none')
             weighted_training_loss = torch.mean(weights * loss)
-            #foptimizer.step(weighted_training_loss)  # replaces gradients with respect to model weights -> w2
+            foptimizer.step(weighted_training_loss)  # replaces gradients with respect to model weights -> w2
 
             logits_val = fmodel(input_val)
             meta_val_loss = F.cross_entropy(logits_val, target_val)

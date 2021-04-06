@@ -13,14 +13,11 @@ class EasyModel(nn.Module):
     def __init__(self, input_size):
         super(EasyModel, self).__init__()
 
-        self.fc1 = nn.Linear(input_size, 64)
-        self.activation = nn.ReLU()
-        self.fc2 = nn.Linear(64, 10)
+        self.fc1 = nn.Linear(input_size, 10)
 
     def forward(self, x):
         x = torch.flatten(x, start_dim=1).to(device)
-        x = self.activation(self.fc1(x))
-        x = torch.sigmoid(self.fc2(x))
+        x = torch.sigmoid(self.fc1(x))
         return x
 
 
@@ -52,7 +49,7 @@ if __name__ == "__main__":
     visual_encoder = visual_encoder.to(device)
 
 
-    for i in range(10):
+    for i in range(15):
         print('memory_allocated', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
           torch.cuda.memory_reserved() / 1e9)
         meta_learn(model, w_optim, input, target, input_val, target_val, coefficient_vector, visual_encoder)
