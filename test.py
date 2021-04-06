@@ -36,11 +36,14 @@ if __name__ == "__main__":
     print(input.shape, target.shape)
     input_val, target_val = next(iter(train_loader))
     input_val = torch.flatten(input_val, start_dim=1).to(device)
+    target = target.to(device)
+    target_val = target_val.to(device)
 
     inputDim = next(iter(train_loader))[0].shape[0]
     coefficient_vector = torch.nn.Parameter(torch.ones(inputDim, 1, requires_grad=True).to(device))
 
     model = EasyModel(input.shape[1])
+    model = model.to(device)
     with torch.no_grad():
         o = model(input)
 
