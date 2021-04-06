@@ -44,6 +44,7 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
             logits.detach()
             weighted_training_loss.detach()
         optimizer.zero_grad()
+        foptimizer.zero_grad()
         for module in fmodel.modules():
             if isinstance(module, nn.Linear):
                 del module.weight
