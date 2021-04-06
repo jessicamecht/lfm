@@ -147,33 +147,32 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
     with torch.no_grad():
         logits_val = model(input_val)
 
-    with torch.backends.cudnn.flags(enabled=False):
-        with higher.innerloop_ctx(model, optimizer, copy_initial_weights=True) as (fmodel, foptimizer):
-            # functional version of model allows gradient propagation through parameters of a model
-            logits = fmodel(input)
+    with higher.innerloop_ctx(model, optimizer, copy_initial_weights=True) as (fmodel, foptimizer):
+        # functional version of model allows gradient propagation through parameters of a model
+        logits = fmodel(input)
 
-            weights = calc_instance_weights(input, target, input_val, target_val, logits_val, coefficient_vector, visual_encoder)
-            loss = F.cross_entropy(logits, target, reduction='none')
-            weighted_training_loss = torch.mean(weights * loss)
-            foptimizer.step(weighted_training_loss)  # replaces gradients with respect to model weights -> w2
+        weights = calc_instance_weights(input, target, input_val, target_val, logits_val, coefficient_vector, visual_encoder)
+        loss = F.cross_entropy(logits, target, reduction='none')
+        weighted_training_loss = torch.mean(weights * loss)
+        foptimizer.step(weighted_training_loss)  # replaces gradients with respect to model weights -> w2
 
-            logits_val = fmodel(input_val)
-            meta_val_loss = F.cross_entropy(logits_val, target_val)
-            meta_val_loss.backward()
+        logits_val = fmodel(input_val)
+        meta_val_loss = F.cross_entropy(logits_val, target_val)
+        meta_val_loss.backward()
 
 
-            #coeff_vector_gradients = torch.autograd.grad(meta_val_loss, coefficient_vector, retain_graph=True)
-            #coeff_vector_gradients = coeff_vector_gradients[0].detach()
-            #visual_encoder_gradients = torch.autograd.grad(meta_val_loss, visual_encoder.parameters())
-            #visual_encoder_gradients = (visual_encoder_gradients[0].detach(), visual_encoder_gradients[1].detach())# equivalent to backward for given parameters
-            logits.detach()
-            weighted_training_loss.detach()
-        for module in fmodel.modules():
-            if isinstance(module, nn.Linear):
-                del module.weight
-        del logits, meta_val_loss, foptimizer, fmodel, weighted_training_loss, logits_val, weights,
-        gc.collect()
-        torch.cuda.empty_cache()
+        #coeff_vector_gradients = torch.autograd.grad(meta_val_loss, coefficient_vector, retain_graph=True)
+        #coeff_vector_gradients = coeff_vector_gradients[0].detach()
+        #visual_encoder_gradients = torch.autograd.grad(meta_val_loss, visual_encoder.parameters())
+        #visual_encoder_gradients = (visual_encoder_gradients[0].detach(), visual_encoder_gradients[1].detach())# equivalent to backward for given parameters
+        logits.detach()
+        weighted_training_loss.detach()
+    for module in fmodel.modules():
+        if isinstance(module, nn.Linear):
+            del module.weight
+    del logits, meta_val_loss, foptimizer, fmodel, weighted_training_loss, logits_val, weights,
+    gc.collect()
+    torch.cuda.empty_cache()
     #return visual_encoder_gradients, coeff_vector_gradients
 
 
