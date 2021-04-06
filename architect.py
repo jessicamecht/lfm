@@ -11,7 +11,7 @@ import torch.nn as nn
 
 class Architect():
     """ Compute gradients of alphas """
-    def __init__(self, net, w_momentum, w_weight_decay):
+    def __init__(self, net, w_momentum, w_weight_decay, coefficient_vector, visual_encoder, config):
         """
         Args:
             net
@@ -21,6 +21,9 @@ class Architect():
         self.v_net = copy.deepcopy(net)
         self.w_momentum = w_momentum
         self.w_weight_decay = w_weight_decay
+        self.coefficient_vector = coefficient_vector
+        self.visual_encoder = visual_encoder
+        self.config = config
 
     def virtual_step(self, trn_X, trn_y, xi, w_optim):
         """
@@ -84,7 +87,9 @@ class Architect():
         #visual_encoder_gradients, coeff_vector_gradients =
         print('memory_allocated', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
               torch.cuda.memory_reserved() / 1e9)
-        meta_learn(self.net, w_optim, trn_X, trn_y, val_X, val_y, coefficient_vector, visual_encoder)
+        self.coefficient_vector, visual_encoder_parameters = meta_learn_new(self.net, trn_X, trn_y, val_X, val_y, coefficient_vector, visual_encoder, self.config)
+        self.visual_encoder.load_state_dict(visual_encoder_parameters)
+        #meta_learn(self.net, w_optim, trn_X, trn_y, val_X, val_y, coefficient_vector, visual_encoder)
         print('memory_allocated1', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
               torch.cuda.memory_reserved() / 1e9)
         #update_gradients(visual_encoder_gradients, coeff_vector_gradients, visual_encoder, coefficient_vector)
@@ -175,6 +180,59 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
         gc.collect()
         torch.cuda.empty_cache()
     #return visual_encoder_gradients, coeff_vector_gradients
+
+
+def meta_learn_new(model, input, target, input_val, target_val, coefficient_vector, visual_encoder, config):
+    device = 'cpu'
+
+    model = model.to(device)
+    input = input.to(device)
+    target = target.to(device)
+    input_val = input_val.to(device)
+    target_val = target_val.to(device)
+    coefficient_vector = torch.nn.Parameter(torch.tensor(coefficient_vector, requires_grad=True).to(device))
+    visual_encoder = visual_encoder.to(device)
+
+    optimizer = torch.optim.SGD(model.parameters(), config.w_lr, momentum=config.w_momentum,
+                                weight_decay=config.w_weight_decay)
+
+    visual_encoder_optimizer = torch.optim.Adam(visual_encoder.parameters(), betas=(0.5, 0.999),
+                                                weight_decay=config.alpha_weight_decay)
+
+    coeff_vector_optimizer = torch.optim.Adam([coefficient_vector], betas=(0.5, 0.999),
+                                              weight_decay=config.alpha_weight_decay)
+
+    with torch.no_grad():
+        logits_val = model(input_val)
+    visual_encoder_optimizer.zero_grad()
+    coeff_vector_optimizer.zero_grad()
+    with torch.backends.cudnn.flags(enabled=False):
+        with higher.innerloop_ctx(model, optimizer, copy_initial_weights=True, track_higher_grads=True,
+                                  device=device) as (fmodel, foptimizer):
+            # functional version of model allows gradient propagation through parameters of a model
+            logits = fmodel(input)
+
+            weights = calc_instance_weights(input, target, input_val, target_val, logits_val, coefficient_vector,
+                                            visual_encoder)
+            loss = F.cross_entropy(logits, target, reduction='none')
+            weighted_training_loss = torch.mean(weights * loss)
+            foptimizer.step(weighted_training_loss)  # replaces gradients with respect to model weights -> w2
+
+            logits_val = fmodel(input_val)
+            meta_val_loss = F.cross_entropy(logits_val, target_val)
+            meta_val_loss.backward()
+            visual_encoder_optimizer.step()
+            coeff_vector_optimizer.step()
+
+            logits.detach()
+            meta_val_loss.detach()
+            loss.detach()
+            weighted_training_loss.detach()
+
+        del logits, meta_val_loss, foptimizer, fmodel, weighted_training_loss, logits_val, weights,
+        gc.collect()
+        torch.cuda.empty_cache()
+        return coefficient_vector, visual_encoder.state_dict()
 
 
 def update_gradients(visual_encoder_gradients, coeff_vector_gradients, visual_encoder, coefficient_vector):

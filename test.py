@@ -26,7 +26,9 @@ class EasyModel(nn.Module):
         x = self.fc1(x)
         return x
 
-def meta_learn(model, optimizer, input, target, input_val, target_val, coefficient_vector, visual_encoder, visual_encoder_optimizer, coeff_vector_optimizer):
+def meta_learn(model, input, target, input_val, target_val, coefficient_vector, visual_encoder):
+
+
     device = 'cpu'
 
     model = model.to(device)
@@ -63,22 +65,14 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
             logits_val = fmodel(input_val)
             meta_val_loss = F.cross_entropy(logits_val, target_val)
             meta_val_loss.backward()
-
-            print(coefficient_vector)
             visual_encoder_optimizer.step()
             coeff_vector_optimizer.step()
-            print(coefficient_vector)
-
 
             logits.detach()
             meta_val_loss.detach()
             loss.detach()
             weighted_training_loss.detach()
-        optimizer.zero_grad()
 
-        for module in fmodel.modules():
-            if isinstance(module, nn.Linear):
-                del module.weight
         del logits, meta_val_loss, foptimizer, fmodel, weighted_training_loss, logits_val, weights,
         gc.collect()
         torch.cuda.empty_cache()
