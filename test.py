@@ -14,11 +14,11 @@ class EasyModel(nn.Module):
         super(EasyModel, self).__init__()
         self.fc1 = nn.Linear(input_size, 64)
         self.activation = nn.ReLU()
-        self.fc2 = nn.Linear(64, 1)
+        self.fc2 = nn.Linear(64, 10)
 
     def forward(self, x):
         x = self.activation(self.fc1(x))
-        x = self.activation(self.fc2(x))
+        x = self.sigmoid(self.fc2(x))
         return x
 
 
