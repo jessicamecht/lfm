@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
     model = EasyModel(input.shape[1])
 
-    w_optim = torch.optim.SGD(model.weights(), config.w_lr, momentum=config.w_momentum,
+    w_optim = torch.optim.SGD(model.parameters(), config.w_lr, momentum=config.w_momentum,
                               weight_decay=config.w_weight_decay)
 
     visual_encoder = Resnet_Encoder(nn.CrossEntropyLoss())
