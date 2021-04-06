@@ -31,13 +31,17 @@ if __name__ == "__main__":
                                                pin_memory=True,
                                                drop_last=True)
     input, target = next(iter(train_loader))
-    input, target = torch.flatten(input, start_dim=1).to(device), torch.flatten(input).to(device)
+    input, target = torch.flatten(input, start_dim=1).to(device), torch.flatten(target, start_dim=1).to(device)
     print(input.shape, target.shape)
     input_val, target_val = next(iter(train_loader))
+    input_val, target_val = torch.flatten(input_val, start_dim=1).to(device), torch.flatten(target_val, start_dim=1).to(device)
+
     inputDim = next(iter(train_loader))[0].shape[0]
     coefficient_vector = torch.nn.Parameter(torch.ones(inputDim, 1, requires_grad=True).to(device))
 
     model = EasyModel(input.shape[1])
+    with torch.no_grad():
+        o = model(input)
 
     w_optim = torch.optim.SGD(model.parameters(), config.w_lr, momentum=config.w_momentum,
                               weight_decay=config.w_weight_decay)
