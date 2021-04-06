@@ -12,12 +12,11 @@ device = torch.device("cuda")
 class EasyModel(nn.Module):
     def __init__(self, input_size):
         super(EasyModel, self).__init__()
-
         self.fc1 = nn.Linear(input_size, 10)
 
     def forward(self, x):
         x = torch.flatten(x, start_dim=1).to(device)
-        x = torch.sigmoid(self.fc1(x))
+        x = self.fc1(x)
         return x
 
 
