@@ -101,3 +101,5 @@ if __name__ == "__main__":
     gc.collect()
     torch.cuda.empty_cache()
     mem_report()
+    print('memory_allocated2', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
+          torch.cuda.memory_reserved() / 1e9)
