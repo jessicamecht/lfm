@@ -29,13 +29,16 @@ class EasyModel(nn.Module):
 def meta_learn(model, optimizer, input, target, input_val, target_val, coefficient_vector, visual_encoder, visual_encoder_optimizer, coeff_vector_optimizer):
     device = 'cpu'
 
-    model.to(device)
+    model = model.to(device)
     input = input.to(device)
     target = target.to(device)
     input_val = input_val.to(device)
     target_val = target_val.to(device)
     coefficient_vector = torch.nn.Parameter(torch.tensor(coefficient_vector, requires_grad=True).to(device))
-    visual_encoder.to(device)
+    visual_encoder = visual_encoder.to(device)
+
+    optimizer = torch.optim.SGD(model.parameters(), config.w_lr, momentum=config.w_momentum,
+                              weight_decay=config.w_weight_decay)
 
     visual_encoder_optimizer = torch.optim.Adam(visual_encoder.parameters(), betas=(0.5, 0.999),
                                                 weight_decay=config.alpha_weight_decay)
