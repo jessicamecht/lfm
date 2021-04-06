@@ -31,6 +31,5 @@ def extract_resnet_features(images, model):
     :param model torch model to extract features with
     :returns torch of size (number images, number features)'''
     img_var = images
-    with torch.no_grad():
-        features_var = model(img_var) # get the output from the last hidden layer of the pretrained resnet
-        return torch.squeeze(features_var)
+    features_var = model(img_var) # get the output from the last hidden layer of the pretrained resnet
+    return torch.squeeze(features_var)
