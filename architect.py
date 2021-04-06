@@ -172,7 +172,7 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
         for module in fmodel.modules():
             if isinstance(module, nn.Linear):
                 del module.weight
-        del logits, meta_val_loss, foptimizer, fmodel, weighted_training_loss, logits_val, weights,
+        del logits, meta_val_loss, foptimizer, fmodel, weighted_training_loss, logits_val, #weights,
         gc.collect()
         torch.cuda.empty_cache()
     #return visual_encoder_gradients, coeff_vector_gradients
