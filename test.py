@@ -13,7 +13,7 @@ from mem_report import mem_report
 
 
 config = SearchConfig()
-device = torch.device("cpu")
+device = torch.device("cuda")
 
 
 class EasyModel(nn.Module):
@@ -27,12 +27,21 @@ class EasyModel(nn.Module):
         return x
 
 def meta_learn(model, optimizer, input, target, input_val, target_val, coefficient_vector, visual_encoder, visual_encoder_optimizer, coeff_vector_optimizer):
+    device = 'cpu'
+
+    model.to(device)
+    input = input.to(device)
+    target = target.to(device)
+    input_val = input_val.to(device)
+    target_val = target_val.to(device)
+    coefficient_vector = coefficient_vector.to(device)
+    visual_encoder.to(device)
     with torch.no_grad():
         logits_val = model(input_val)
     visual_encoder_optimizer.zero_grad()
     coeff_vector_optimizer.zero_grad()
     with torch.backends.cudnn.flags(enabled=False):
-        with higher.innerloop_ctx(model, optimizer, copy_initial_weights=False, track_higher_grads=True, device='cpu') as (fmodel, foptimizer):
+        with higher.innerloop_ctx(model, optimizer, copy_initial_weights=False, track_higher_grads=True, device=device) as (fmodel, foptimizer):
             # functional version of model allows gradient propagation through parameters of a model
             logits = fmodel(input)
 
