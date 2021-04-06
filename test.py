@@ -79,9 +79,11 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
         for module in fmodel.modules():
             if isinstance(module, nn.Linear):
                 del module.weight
-        del logits, meta_val_loss, foptimizer, fmodel, weighted_training_loss, logits_val, weights,
-        gc.collect()
-        torch.cuda.empty_cache()
+        return coefficient_vector, visual_encoder.state_dict()
+
+        #del logits, meta_val_loss, foptimizer, fmodel, weighted_training_loss, logits_val, weights,
+        #gc.collect()
+        #torch.cuda.empty_cache()
 
 
 if __name__ == "__main__":
@@ -122,7 +124,8 @@ if __name__ == "__main__":
     for i in range(10):
         print('memory_allocated', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
           torch.cuda.memory_reserved() / 1e9)
-        meta_learn(model, w_optim, input, target, input_val, target_val, coefficient_vector, visual_encoder, visual_encoder_optimizer, coeff_vector_optimizer)
+        coefficient_vector, visual_encoder_parameters = meta_learn(model, w_optim, input, target, input_val, target_val, coefficient_vector, visual_encoder, visual_encoder_optimizer, coeff_vector_optimizer)
+        visual_encoder.load_state_dict(visual_encoder_parameters)
         print('memory_allocated1', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
           torch.cuda.memory_reserved() / 1e9)
     del coeff_vector_optimizer, visual_encoder_optimizer, visual_encoder, w_optim, model, coefficient_vector, inputDim, input_val, target_val, device, input, target, input_size, input_channels, n_classes, train_data
