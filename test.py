@@ -53,8 +53,10 @@ if __name__ == "__main__":
     visual_encoder = Resnet_Encoder(nn.CrossEntropyLoss())
     visual_encoder = visual_encoder.to(device)
 
-    print('memory_allocated', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
+
+    for i in range(10):
+        print('memory_allocated', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
           torch.cuda.memory_reserved() / 1e9)
-    meta_learn(model, w_optim, input, target, input_val, target_val, coefficient_vector, visual_encoder)
-    print('memory_allocated1', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
+        meta_learn(model, w_optim, input, target, input_val, target_val, coefficient_vector, visual_encoder)
+        print('memory_allocated1', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
           torch.cuda.memory_reserved() / 1e9)
