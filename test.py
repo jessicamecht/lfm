@@ -34,14 +34,13 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
     target = target.to(device)
     input_val = input_val.to(device)
     target_val = target_val.to(device)
-    coefficient_vector = coefficient_vector.to(device).requires_grad_(True)
+    coefficient_vector = torch.nn.Parameter(torch.tensor(coefficient_vector, requires_grad=True).to(device))
     visual_encoder.to(device)
 
     visual_encoder_optimizer = torch.optim.Adam(visual_encoder.parameters(), betas=(0.5, 0.999),
                                                 weight_decay=config.alpha_weight_decay)
 
-    coeff_vector_optimizer = torch.optim.Adam([coefficient_vector], betas=(0.5, 0.999),
-                                              weight_decay=config.alpha_weight_decay)
+    coeff_vector_optimizer = torch.optim.Adam([coefficient_vector], betas=(0.5, 0.999), weight_decay=config.alpha_weight_decay)
 
 
     with torch.no_grad():
