@@ -31,6 +31,7 @@ if __name__ == "__main__":
                                                pin_memory=True,
                                                drop_last=True)
     input, target = next(iter(train_loader))
+    print(input.shape, target.shape)
     input, target = torch.flatten(input, start_dim=1).to(device), torch.flatten(target, start_dim=1).to(device)
     print(input.shape, target.shape)
     input_val, target_val = next(iter(train_loader))
