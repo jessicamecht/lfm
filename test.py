@@ -1,9 +1,14 @@
-from architect import meta_learn
 import torch
+import gc
 import utils
 import torch.nn as nn
 from config import SearchConfig
+from weight_samples.sample_weights import calc_instance_weights
+
 from models.visual_encoder import Resnet_Encoder
+import higher
+import torch.nn.functional as F
+
 
 config = SearchConfig()
 device = torch.device("cuda")
@@ -18,6 +23,33 @@ class EasyModel(nn.Module):
         x = torch.flatten(x, start_dim=1).to(device)
         x = self.fc1(x)
         return x
+
+def meta_learn(model, optimizer, input, target, input_val, target_val, coefficient_vector, visual_encoder):
+    with torch.no_grad():
+        logits_val = model(input_val)
+
+    with torch.backends.cudnn.flags(enabled=False):
+        with higher.innerloop_ctx(model, optimizer, copy_initial_weights=False) as (fmodel, foptimizer):
+            # functional version of model allows gradient propagation through parameters of a model
+            logits = fmodel(input)
+
+            weights = calc_instance_weights(input, target, input_val, target_val, logits_val, coefficient_vector, visual_encoder)
+            loss = F.cross_entropy(logits, target, reduction='none')
+            weighted_training_loss = torch.mean(weights * loss)
+            foptimizer.step(weighted_training_loss)  # replaces gradients with respect to model weights -> w2
+
+            logits_val = fmodel(input_val)
+            meta_val_loss = F.cross_entropy(logits_val, target_val)
+            meta_val_loss.backward()
+            logits.detach()
+            weighted_training_loss.detach()
+            foptimizer.zero_grad()
+        for module in fmodel.modules():
+            if isinstance(module, nn.Linear):
+                del module.weight
+        del logits, meta_val_loss, foptimizer, fmodel, weighted_training_loss, logits_val, weights,
+        gc.collect()
+        torch.cuda.empty_cache()
 
 
 if __name__ == "__main__":
