@@ -32,6 +32,7 @@ if __name__ == "__main__":
                                                drop_last=True)
     input, target = next(iter(train_loader))
     input, target = torch.flatten(input, start_dim=1).to(device), torch.flatten(input).to(device)
+    print(input.shape, target.shape)
     input_val, target_val = next(iter(train_loader))
     inputDim = next(iter(train_loader))[0].shape[0]
     coefficient_vector = torch.nn.Parameter(torch.ones(inputDim, 1, requires_grad=True).to(device))
