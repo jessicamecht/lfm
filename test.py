@@ -10,11 +10,11 @@ device = torch.device("cuda")
 
 
 class EasyModel(nn.Module):
-    def __init__(self, input_size):
+    def __init__(self, input_size, output_size):
         super(EasyModel, self).__init__()
         self.fc1 = nn.Linear(input_size, 64)
         self.activation = nn.ReLU()
-        self.fc2 = nn.Linear(64, input_size)
+        self.fc2 = nn.Linear(64, 1)
 
     def forward(self, x):
         x = self.activation(self.fc1(x))
@@ -32,10 +32,10 @@ if __name__ == "__main__":
                                                drop_last=True)
     input, target = next(iter(train_loader))
     print(input.shape, target.shape)
-    input, target = torch.flatten(input, start_dim=1).to(device), torch.flatten(target, start_dim=1).to(device)
+    input = torch.flatten(input, start_dim=1).to(device)
     print(input.shape, target.shape)
     input_val, target_val = next(iter(train_loader))
-    input_val, target_val = torch.flatten(input_val, start_dim=1).to(device), torch.flatten(target_val, start_dim=1).to(device)
+    input_val = torch.flatten(input_val, start_dim=1).to(device)
 
     inputDim = next(iter(train_loader))[0].shape[0]
     coefficient_vector = torch.nn.Parameter(torch.ones(inputDim, 1, requires_grad=True).to(device))
