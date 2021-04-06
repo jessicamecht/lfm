@@ -24,10 +24,11 @@ class EasyModel(nn.Module):
         x = self.fc1(x)
         return x
 
-def meta_learn(model, optimizer, input, target, input_val, target_val, coefficient_vector, visual_encoder):
+def meta_learn(model, optimizer, input, target, input_val, target_val, coefficient_vector, visual_encoder, visual_encoder_optimizer, coeff_vector_optimizer):
     with torch.no_grad():
         logits_val = model(input_val)
-
+    visual_encoder_optimizer.zero_grad()
+    coeff_vector_optimizer.zero_grad()
     with torch.backends.cudnn.flags(enabled=False):
         with higher.innerloop_ctx(model, optimizer, copy_initial_weights=False) as (fmodel, foptimizer):
             # functional version of model allows gradient propagation through parameters of a model
@@ -41,6 +42,8 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
             logits_val = fmodel(input_val)
             meta_val_loss = F.cross_entropy(logits_val, target_val)
             meta_val_loss.backward()
+            visual_encoder_optimizer.step()
+            coeff_vector_optimizer.step()
             logits.detach()
             weighted_training_loss.detach()
         optimizer.zero_grad()
@@ -79,10 +82,16 @@ if __name__ == "__main__":
     visual_encoder = Resnet_Encoder(nn.CrossEntropyLoss())
     visual_encoder = visual_encoder.to(device)
 
+    visual_encoder_optimizer = torch.optim.Adam(visual_encoder.parameters(), betas=(0.5, 0.999),
+                                                weight_decay=config.alpha_weight_decay)
+
+    coeff_vector_optimizer = torch.optim.Adam([coefficient_vector], betas=(0.5, 0.999),
+                                              weight_decay=config.alpha_weight_decay)
+
 
     for i in range(15):
         print('memory_allocated', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
           torch.cuda.memory_reserved() / 1e9)
-        meta_learn(model, w_optim, input, target, input_val, target_val, coefficient_vector, visual_encoder)
+        meta_learn(model, w_optim, input, target, input_val, target_val, coefficient_vector, visual_encoder, visual_encoder_optimizer, coeff_vector_optimizer)
         print('memory_allocated1', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
           torch.cuda.memory_reserved() / 1e9)
