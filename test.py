@@ -22,7 +22,7 @@ class EasyModel(nn.Module):
         self.fc1 = nn.Linear(input_size, 10)
 
     def forward(self, x):
-        x = torch.flatten(x, start_dim=1).to(device)
+        x = torch.flatten(x, start_dim=1).to('cpu')
         x = self.fc1(x)
         return x
 
