@@ -47,6 +47,8 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
             visual_encoder_optimizer.step()
             coeff_vector_optimizer.step()
             logits.detach()
+            meta_val_loss.detach()
+            loss.detach()
             weighted_training_loss.detach()
         optimizer.zero_grad()
 
