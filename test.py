@@ -36,6 +36,14 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
     target_val = target_val.to(device)
     coefficient_vector = coefficient_vector.to(device)
     visual_encoder.to(device)
+
+    visual_encoder_optimizer = torch.optim.Adam(visual_encoder.parameters(), betas=(0.5, 0.999),
+                                                weight_decay=config.alpha_weight_decay)
+
+    coeff_vector_optimizer = torch.optim.Adam([coefficient_vector], betas=(0.5, 0.999),
+                                              weight_decay=config.alpha_weight_decay)
+
+
     with torch.no_grad():
         logits_val = model(input_val)
     visual_encoder_optimizer.zero_grad()
