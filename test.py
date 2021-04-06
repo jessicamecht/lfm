@@ -32,7 +32,7 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
     visual_encoder_optimizer.zero_grad()
     coeff_vector_optimizer.zero_grad()
     with torch.backends.cudnn.flags(enabled=False):
-        with higher.innerloop_ctx(model, optimizer, copy_initial_weights=False, track_higher_grads=True, device=device) as (fmodel, foptimizer):
+        with higher.innerloop_ctx(model, optimizer, copy_initial_weights=False, track_higher_grads=True, device='cpu') as (fmodel, foptimizer):
             # functional version of model allows gradient propagation through parameters of a model
             logits = fmodel(input)
 
