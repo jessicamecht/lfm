@@ -8,6 +8,8 @@ from weight_samples.sample_weights import calc_instance_weights
 from models.visual_encoder import Resnet_Encoder
 import higher
 import torch.nn.functional as F
+from mem_report import mem_report
+
 
 
 config = SearchConfig()
@@ -30,7 +32,7 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
     visual_encoder_optimizer.zero_grad()
     coeff_vector_optimizer.zero_grad()
     with torch.backends.cudnn.flags(enabled=False):
-        with higher.innerloop_ctx(model, optimizer, copy_initial_weights=True, track_higher_grads=True, device=device) as (fmodel, foptimizer):
+        with higher.innerloop_ctx(model, optimizer, copy_initial_weights=False, track_higher_grads=True, device=device) as (fmodel, foptimizer):
             # functional version of model allows gradient propagation through parameters of a model
             logits = fmodel(input)
 
@@ -65,8 +67,7 @@ if __name__ == "__main__":
                                                pin_memory=True,
                                                drop_last=True)
     input, target = next(iter(train_loader))
-    print(input.shape, target.shape)
-    print(input.shape, target.shape)
+
     input_val, target_val = next(iter(train_loader))
     input, target = input.to(device), target.to(device)
     input_val, target_val = input_val.to(device), target_val.to(device)
@@ -90,9 +91,13 @@ if __name__ == "__main__":
                                               weight_decay=config.alpha_weight_decay)
 
 
-    for i in range(15):
+    for i in range(1):
         print('memory_allocated', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
           torch.cuda.memory_reserved() / 1e9)
         meta_learn(model, w_optim, input, target, input_val, target_val, coefficient_vector, visual_encoder, visual_encoder_optimizer, coeff_vector_optimizer)
         print('memory_allocated1', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
           torch.cuda.memory_reserved() / 1e9)
+    del coeff_vector_optimizer, visual_encoder_optimizer, visual_encoder, w_optim, model, coefficient_vector, inputDim, input_val, target_val, device, input, target, input_size, input_channels, n_classes, train_data
+    gc.collect()
+    torch.cuda.empty_cache()
+    mem_report()
