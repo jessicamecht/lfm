@@ -36,7 +36,8 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
 
             # functional version of model allows gradient propagation through parameters of a model
             fmodel = fmodel.to("cpu")
-            logits = fmodel(input.to("cpu"))
+            i = input.to("cpu")
+            logits = fmodel(i)
 
             weights = calc_instance_weights(input, target, input_val, target_val, logits_val, coefficient_vector, visual_encoder)
             loss = F.cross_entropy(logits.to(device), target, reduction='none')
