@@ -35,6 +35,7 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
         with higher.innerloop_ctx(model, optimizer, copy_initial_weights=False, track_higher_grads=True, device='cpu') as (fmodel, foptimizer):
 
             # functional version of model allows gradient propagation through parameters of a model
+            fmodel = fmodel.to("cpu")
             logits = fmodel(input.to("cpu"))
 
             weights = calc_instance_weights(input, target, input_val, target_val, logits_val, coefficient_vector, visual_encoder)
