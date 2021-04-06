@@ -44,8 +44,6 @@ if __name__ == "__main__":
 
     model = EasyModel(torch.flatten(input, start_dim=1).to(device).shape[1])
     model = model.to(device)
-    with torch.no_grad():
-        o = model(input)
 
     w_optim = torch.optim.SGD(model.parameters(), config.w_lr, momentum=config.w_momentum,
                               weight_decay=config.w_weight_decay)
