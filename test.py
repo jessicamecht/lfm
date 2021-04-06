@@ -59,6 +59,8 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
 
 
 if __name__ == "__main__":
+    print('memory_allocated0', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
+          torch.cuda.memory_reserved() / 1e9)
     input_size, input_channels, n_classes, train_data = utils.get_data(
         config.dataset, config.data_path, cutout_length=0, validation=False)
     train_loader = torch.utils.data.DataLoader(train_data,
@@ -103,6 +105,6 @@ if __name__ == "__main__":
     mem_report()
     print('memory_allocated2', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
           torch.cuda.memory_reserved() / 1e9)
-    torch.cuda.clear_memory_allocated()
-    print('memory_allocated3', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
-          torch.cuda.memory_reserved() / 1e9)
+    #torch.cuda.clear_memory_allocated()
+    #print('memory_allocated3', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
+    #      torch.cuda.memory_reserved() / 1e9)
