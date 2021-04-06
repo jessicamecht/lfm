@@ -10,7 +10,7 @@ device = torch.device("cuda")
 
 
 class EasyModel(nn.Module):
-    def __init__(self, input_size, output_size):
+    def __init__(self, input_size):
         super(EasyModel, self).__init__()
         self.fc1 = nn.Linear(input_size, 64)
         self.activation = nn.ReLU()
