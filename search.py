@@ -80,7 +80,7 @@ def main():
     inputDim = next(iter(valid_loader))[0].shape[0]
     coefficient_vector = torch.nn.Parameter(torch.ones(inputDim, 1,  requires_grad=True).to(device))
 
-    architect = Architect(model, config.w_momentum, config.w_weight_decay, coefficient_vector, visual_encoder, config)
+    architect = Architect(model, config.w_momentum, config.w_weight_decay)
 
     visual_encoder_optimizer = torch.optim.Adam(visual_encoder.parameters(), betas=(0.5, 0.999),
                                                 weight_decay=config.alpha_weight_decay)
