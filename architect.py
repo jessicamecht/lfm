@@ -11,7 +11,7 @@ import torch.nn as nn
 
 class Architect():
     """ Compute gradients of alphas """
-    def __init__(self, net, w_momentum, w_weight_decay, coefficient_vector, visual_encoder, config):
+    def __init__(self, net, w_momentum, w_weight_decay):
         """
         Args:
             net
@@ -21,9 +21,6 @@ class Architect():
         self.v_net = copy.deepcopy(net)
         self.w_momentum = w_momentum
         self.w_weight_decay = w_weight_decay
-        self.coefficient_vector = coefficient_vector
-        self.visual_encoder = visual_encoder
-        self.config = config
 
     def virtual_step(self, trn_X, trn_y, xi, w_optim):
         """
@@ -84,14 +81,22 @@ class Architect():
             for alpha, da, h in zip(self.net.alphas(), dalpha, hessian):
                 alpha.grad = da - xi*h
 
-        #visual_encoder_gradients, coeff_vector_gradients =
+
+        model_backup = self.net.state_dict()
+        w_optim_backup = w_optim.state_dict()
+
+        #self.coefficient_vector, visual_encoder_parameters = meta_learn_new(self.net, trn_X, trn_y, val_X, val_y, coefficient_vector, visual_encoder, self.config)
+        #self.visual_encoder.load_state_dict(visual_encoder_parameters)
         print('memory_allocated', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
               torch.cuda.memory_reserved() / 1e9)
-        self.coefficient_vector, visual_encoder_parameters = meta_learn_new(self.net, trn_X, trn_y, val_X, val_y, coefficient_vector, visual_encoder, self.config)
-        self.visual_encoder.load_state_dict(visual_encoder_parameters)
-        #meta_learn(self.net, w_optim, trn_X, trn_y, val_X, val_y, coefficient_vector, visual_encoder)
+        meta_learn(self.net, w_optim, trn_X, trn_y, val_X, val_y, coefficient_vector, visual_encoder)
         print('memory_allocated1', torch.cuda.memory_allocated() / 1e9, 'memory_reserved',
               torch.cuda.memory_reserved() / 1e9)
+
+
+        self.net.load_state_dict(model_backup)
+        w_optim.load_state_dict(w_optim_backup)
+
         #update_gradients(visual_encoder_gradients, coeff_vector_gradients, visual_encoder, coefficient_vector)
 
     def compute_hessian(self, dw, trn_X, trn_y):
@@ -153,7 +158,8 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
         logits_val = model(input_val)
 
     with torch.backends.cudnn.flags(enabled=False):
-        with higher.innerloop_ctx(model, optimizer, copy_initial_weights=False) as (fmodel, foptimizer):
+        with higher.innerloop_ctx(model, optimizer, copy_initial_weights=False, track_higher_grads=True,
+                                  device='cuda') as (fmodel, foptimizer):
             # functional version of model allows gradient propagation through parameters of a model
             logits = fmodel(input)
 
@@ -166,16 +172,12 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
             meta_val_loss = F.cross_entropy(logits_val, target_val)
             meta_val_loss.backward()
 
-
             #coeff_vector_gradients = torch.autograd.grad(meta_val_loss, coefficient_vector, retain_graph=True)
             #coeff_vector_gradients = coeff_vector_gradients[0].detach()
             #visual_encoder_gradients = torch.autograd.grad(meta_val_loss, visual_encoder.parameters())
             #visual_encoder_gradients = (visual_encoder_gradients[0].detach(), visual_encoder_gradients[1].detach())# equivalent to backward for given parameters
             logits.detach()
             weighted_training_loss.detach()
-        for module in fmodel.modules():
-            if isinstance(module, nn.Linear):
-                del module.weight
         del logits, meta_val_loss, foptimizer, fmodel, weighted_training_loss, logits_val, weights,
         gc.collect()
         torch.cuda.empty_cache()
@@ -184,6 +186,10 @@ def meta_learn(model, optimizer, input, target, input_val, target_val, coefficie
 
 def meta_learn_new(model, input, target, input_val, target_val, coefficient_vector, visual_encoder, config):
     device = 'cpu'
+    with torch.no_grad():
+        logits_val = model(input_val).to(device)
+
+
 
     model = model.to(device)
     input = input.to(device)
@@ -202,8 +208,6 @@ def meta_learn_new(model, input, target, input_val, target_val, coefficient_vect
     coeff_vector_optimizer = torch.optim.Adam([coefficient_vector], betas=(0.5, 0.999),
                                               weight_decay=config.alpha_weight_decay)
 
-    with torch.no_grad():
-        logits_val = model(input_val)
     visual_encoder_optimizer.zero_grad()
     coeff_vector_optimizer.zero_grad()
     with torch.backends.cudnn.flags(enabled=False):
